@@ -16,6 +16,7 @@ from app.core.config import settings
 from app.core.database import init_db
 from app.api.patents import router as patents_router
 from app.api.claims import router as claims_router
+from app.api.ingest import router as ingest_router
 from app.services.cache import cache_service
 
 
@@ -116,6 +117,7 @@ if settings.metrics_enabled:
 # Include routers
 app.include_router(patents_router)
 app.include_router(claims_router)
+app.include_router(ingest_router)
 
 
 # Health check

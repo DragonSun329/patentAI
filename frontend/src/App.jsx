@@ -1,10 +1,11 @@
 import { useState } from 'react'
 import { BrowserRouter, Routes, Route, Link, useLocation } from 'react-router-dom'
-import { Search, Upload, GitCompare, BarChart3, Menu, X } from 'lucide-react'
+import { Search, Upload, GitCompare, BarChart3, Menu, X, Download } from 'lucide-react'
 import SearchPage from './pages/SearchPage'
 import UploadPage from './pages/UploadPage'
 import ComparePage from './pages/ComparePage'
 import DashboardPage from './pages/DashboardPage'
+import ImportPage from './pages/ImportPage'
 
 function NavLink({ to, icon: Icon, children }) {
   const location = useLocation()
@@ -48,6 +49,7 @@ function Layout({ children }) {
             {/* Desktop Nav */}
             <nav className="hidden md:flex items-center gap-2">
               <NavLink to="/search" icon={Search}>Search</NavLink>
+              <NavLink to="/import" icon={Download}>Import</NavLink>
               <NavLink to="/upload" icon={Upload}>Upload</NavLink>
               <NavLink to="/compare" icon={GitCompare}>Compare</NavLink>
               <NavLink to="/dashboard" icon={BarChart3}>Dashboard</NavLink>
@@ -67,6 +69,7 @@ function Layout({ children }) {
         {mobileMenuOpen && (
           <nav className="md:hidden border-t border-gray-200 dark:border-gray-700 p-4 space-y-2">
             <NavLink to="/search" icon={Search}>Search</NavLink>
+            <NavLink to="/import" icon={Download}>Import</NavLink>
             <NavLink to="/upload" icon={Upload}>Upload</NavLink>
             <NavLink to="/compare" icon={GitCompare}>Compare</NavLink>
             <NavLink to="/dashboard" icon={BarChart3}>Dashboard</NavLink>
@@ -126,6 +129,7 @@ export default function App() {
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/search" element={<SearchPage />} />
+          <Route path="/import" element={<ImportPage />} />
           <Route path="/upload" element={<UploadPage />} />
           <Route path="/compare" element={<ComparePage />} />
           <Route path="/dashboard" element={<DashboardPage />} />

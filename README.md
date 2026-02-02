@@ -111,6 +111,16 @@ npm run dev
 | POST | `/claims/search` | Find similar claims across all patents |
 | GET | `/claims/{id}` | Get a specific claim |
 
+### USPTO Import
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/ingest/uspto/search` | Search USPTO patents |
+| POST | `/ingest/uspto/import` | Import specific patents by number |
+| POST | `/ingest/uspto/bulk` | Bulk import by criteria |
+| GET | `/ingest/uspto/patent/{num}` | Preview patent before import |
+| GET | `/ingest/uspto/assignee/{name}` | Search by company |
+| GET | `/ingest/uspto/cpc/{code}` | Search by CPC classification |
+
 ### System
 | Method | Endpoint | Description |
 |--------|----------|-------------|
