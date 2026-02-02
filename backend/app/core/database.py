@@ -30,6 +30,8 @@ async def init_db() -> None:
     async with engine.begin() as conn:
         # Enable pgvector extension
         await conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector"))
+        # Enable pg_trgm for fuzzy search (optional, for future optimization)
+        await conn.execute(text("CREATE EXTENSION IF NOT EXISTS pg_trgm"))
         # Create all tables
         await conn.run_sync(Base.metadata.create_all)
 

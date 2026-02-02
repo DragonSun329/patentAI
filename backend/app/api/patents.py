@@ -14,6 +14,7 @@ from app.services.embedding import embedding_service
 from app.services.search import search_service, SearchResult
 from app.services.llm import llm_service
 from app.services.cache import cache_service
+from app.services.claim_service import claim_service
 
 router = APIRouter(prefix="/patents", tags=["patents"])
 
@@ -121,6 +122,11 @@ async def create_patent(
     session.add(db_patent)
     await session.commit()
     await session.refresh(db_patent)
+    
+    # Auto-process claims if claims text is provided
+    if patent.claims:
+        await claim_service.process_patent_claims(session, patent_id)
+        await session.commit()
     
     return PatentResponse(
         id=db_patent.id,

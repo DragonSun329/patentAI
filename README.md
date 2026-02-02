@@ -7,10 +7,20 @@ AI-powered patent infringement detection system with hybrid search and LLM analy
 ## Features
 
 - 🔍 **Hybrid Search** - Vector similarity (pgvector) + fuzzy text matching (RapidFuzz)
+- ⚖️ **Claim-Level Analysis** - Parse individual claims, embed separately, compare claim-by-claim
 - 🤖 **LLM Analysis** - AI-powered infringement risk assessment with explanations
 - 📊 **Prometheus Metrics** - Full observability with Grafana dashboards
 - ⚡ **Redis Caching** - Fast repeated queries
 - 🎨 **Modern UI** - React + Vite + TailwindCSS
+
+### Why Claim-Level Analysis Matters
+
+Patent infringement is determined by **specific claims**, not abstracts or titles. PatentAI:
+1. Parses each numbered claim from patent text
+2. Identifies independent vs dependent claims
+3. Generates embeddings per-claim for precise matching
+4. Compares every claim pair between two patents
+5. Highlights which specific claims overlap and at what risk level
 
 ## Tech Stack
 
@@ -83,13 +93,27 @@ npm run dev
 
 ## API Endpoints
 
+### Patents
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| POST | `/patents/` | Upload a new patent |
+| POST | `/patents/` | Upload a new patent (auto-parses claims) |
 | GET | `/patents/{id}` | Get patent by ID |
 | GET | `/patents/` | List all patents |
 | POST | `/patents/search` | Hybrid search |
-| POST | `/patents/compare` | Compare two patents |
+| POST | `/patents/compare` | Compare two patents (overview) |
+
+### Claims (Claim-Level Analysis)
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/claims/process` | Parse & embed claims for a patent |
+| GET | `/claims/patent/{id}` | Get all claims for a patent |
+| POST | `/claims/compare` | Claim-level comparison between patents |
+| POST | `/claims/search` | Find similar claims across all patents |
+| GET | `/claims/{id}` | Get a specific claim |
+
+### System
+| Method | Endpoint | Description |
+|--------|----------|-------------|
 | GET | `/health` | Health check |
 | GET | `/metrics` | Prometheus metrics |
 
