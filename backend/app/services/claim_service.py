@@ -89,8 +89,11 @@ class ClaimService:
         for parsed in parsed_claims:
             claim_id = str(uuid.uuid4())
             
-            # Generate embedding for this claim
-            embedding = await embedding_service.embed_text(parsed.claim_text)
+            # Generate embedding for this claim (with chunking for long claims)
+            embedding = await embedding_service.embed_claim(
+                parsed.claim_text, 
+                claim_number=parsed.claim_number
+            )
             
             # Extract key elements
             key_elements = claim_parser.extract_key_elements(parsed.claim_text)

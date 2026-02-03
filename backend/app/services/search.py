@@ -10,6 +10,7 @@ from rapidfuzz import fuzz, process
 
 from app.models.patent import Patent, SearchHistory
 from app.services.embedding import embedding_service
+from app.services.reranker import reranker_service
 from app.core.config import settings
 
 
@@ -101,7 +102,8 @@ class PatentSearchService:
         query: str,
         limit: int = None,
         vector_weight: float = 0.7,
-        fuzzy_weight: float = 0.3
+        fuzzy_weight: float = 0.3,
+        use_reranker: bool = True
     ) -> List[SearchResult]:
         """
         Hybrid search combining vector and fuzzy matching.
@@ -111,6 +113,7 @@ class PatentSearchService:
             limit: Maximum results
             vector_weight: Weight for vector similarity (0-1)
             fuzzy_weight: Weight for fuzzy matching (0-1)
+            use_reranker: Apply cross-encoder reranking for better accuracy
         """
         start_time = time.time()
         limit = limit or self.max_results
@@ -172,12 +175,41 @@ class PatentSearchService:
                 result.fuzzy_score * fuzzy_weight
             )
         
-        # Sort by combined score and limit
+        # Sort by combined score
         results = sorted(
             combined.values(),
             key=lambda x: x.combined_score,
             reverse=True
-        )[:limit]
+        )
+        
+        # Apply reranking for better precision
+        if use_reranker and results:
+            # Prepare for reranking
+            rerank_input = [
+                {
+                    "text": f"{r.patent.get('title', '')} {r.patent.get('abstract', '')}",
+                    "score": r.combined_score,
+                    "result": r
+                }
+                for r in results[:20]  # Rerank top 20
+            ]
+            
+            reranked = await reranker_service.rerank(
+                query=query,
+                results=rerank_input,
+                text_field="text",
+                score_field="score",
+                top_k=limit
+            )
+            
+            # Update results with reranked scores
+            results = []
+            for rr in reranked:
+                original_result = rr.item["result"]
+                original_result.combined_score = rr.final_score
+                results.append(original_result)
+        else:
+            results = results[:limit]
         
         # Filter by threshold
         results = [r for r in results if r.combined_score >= self.similarity_threshold]

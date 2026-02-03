@@ -2,9 +2,11 @@
 import asyncio
 import uuid
 import re
+import hashlib
+import json
 from typing import List, Dict, Any, Optional
 from datetime import datetime, date
-from dataclasses import dataclass
+from dataclasses import dataclass, asdict
 import httpx
 
 from app.core.config import settings
@@ -31,12 +33,27 @@ class USPTOService:
     
     Uses the PatentsView API (free, no key required):
     https://patentsview.org/apis/api-endpoints/patents
+    
+    All API results are cached in Redis for efficiency.
     """
     
     BASE_URL = "https://api.patentsview.org/patents/query"
     
     def __init__(self):
         self.client = httpx.AsyncClient(timeout=60.0)
+        self._cache = None
+    
+    @property
+    def cache(self):
+        """Lazy load cache service."""
+        if self._cache is None:
+            from app.services.cache import cache_service
+            self._cache = cache_service
+        return self._cache
+    
+    def _hash_request(self, request_body: dict) -> str:
+        """Hash request body for cache key."""
+        return hashlib.md5(json.dumps(request_body, sort_keys=True).encode()).hexdigest()
     
     async def search_patents(
         self,
@@ -148,9 +165,27 @@ class USPTOService:
         Get full patent details including claims.
         
         Uses PatentsView API with expanded fields.
+        Results are cached for 7 days.
         """
         # Clean patent number
         patent_number = re.sub(r'[^0-9]', '', patent_number)
+        
+        # Check cache first
+        if self.cache.redis:
+            cached = await self.cache.get_uspto_patent(patent_number)
+            if cached:
+                return USPTOPatent(
+                    patent_number=cached.get("patent_number"),
+                    title=cached.get("title", ""),
+                    abstract=cached.get("abstract", ""),
+                    claims=cached.get("claims"),
+                    description=cached.get("description"),
+                    applicant=cached.get("applicant"),
+                    inventors=cached.get("inventors"),
+                    filing_date=self._parse_date(cached.get("filing_date")),
+                    publication_date=self._parse_date(cached.get("publication_date")),
+                    classification=cached.get("classification")
+                )
         
         request_body = {
             "q": {"patent_number": patent_number},
@@ -196,7 +231,7 @@ class USPTOService:
             if p.get("cpc_group_id"):
                 cpc = p.get("cpc_group_id")
             
-            return USPTOPatent(
+            patent = USPTOPatent(
                 patent_number=p.get("patent_number"),
                 title=p.get("patent_title", ""),
                 abstract=p.get("patent_abstract", ""),
@@ -208,6 +243,24 @@ class USPTOService:
                 publication_date=self._parse_date(p.get("patent_date")),
                 classification=cpc
             )
+            
+            # Cache the result
+            if self.cache.redis:
+                cache_data = {
+                    "patent_number": patent.patent_number,
+                    "title": patent.title,
+                    "abstract": patent.abstract,
+                    "claims": patent.claims,
+                    "description": patent.description,
+                    "applicant": patent.applicant,
+                    "inventors": patent.inventors,
+                    "filing_date": str(patent.filing_date) if patent.filing_date else None,
+                    "publication_date": str(patent.publication_date) if patent.publication_date else None,
+                    "classification": patent.classification
+                }
+                await self.cache.set_uspto_patent(patent_number, cache_data)
+            
+            return patent
             
         except httpx.HTTPError as e:
             print(f"USPTO API error: {e}")

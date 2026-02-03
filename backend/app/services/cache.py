@@ -1,7 +1,7 @@
 """Redis caching service."""
 import json
 import hashlib
-from typing import Any, Optional
+from typing import Any, Optional, List
 
 import redis.asyncio as redis
 
@@ -9,7 +9,14 @@ from app.core.config import settings
 
 
 class CacheService:
-    """Redis-based caching for search results and embeddings."""
+    """Redis-based caching for search results, embeddings, and USPTO data."""
+    
+    # TTL constants (in seconds)
+    TTL_EMBEDDING = 86400 * 30  # 30 days - embeddings don't change
+    TTL_USPTO_PATENT = 86400 * 7  # 7 days - patent data is stable
+    TTL_USPTO_SEARCH = 86400 * 1  # 1 day - search results refresh daily
+    TTL_SEARCH = 3600  # 1 hour - internal search results
+    TTL_ANALYSIS = 86400 * 7  # 7 days - LLM analysis
     
     def __init__(self):
         self.redis: Optional[redis.Redis] = None
@@ -35,6 +42,38 @@ class CacheService:
     def _hash_query(self, query: str) -> str:
         """Hash a query string for cache key."""
         return hashlib.md5(query.encode()).hexdigest()
+    
+    # --- USPTO API Caching ---
+    
+    async def get_uspto_patent(self, patent_number: str) -> Optional[dict]:
+        """Get cached USPTO patent data."""
+        if not self.redis:
+            return None
+        key = self._make_key("uspto:patent", patent_number)
+        data = await self.redis.get(key)
+        return json.loads(data) if data else None
+    
+    async def set_uspto_patent(self, patent_number: str, patent_data: dict):
+        """Cache USPTO patent data."""
+        if not self.redis:
+            return
+        key = self._make_key("uspto:patent", patent_number)
+        await self.redis.setex(key, self.TTL_USPTO_PATENT, json.dumps(patent_data))
+    
+    async def get_uspto_search(self, query_hash: str) -> Optional[List[dict]]:
+        """Get cached USPTO search results."""
+        if not self.redis:
+            return None
+        key = self._make_key("uspto:search", query_hash)
+        data = await self.redis.get(key)
+        return json.loads(data) if data else None
+    
+    async def set_uspto_search(self, query_hash: str, results: List[dict]):
+        """Cache USPTO search results."""
+        if not self.redis:
+            return
+        key = self._make_key("uspto:search", query_hash)
+        await self.redis.setex(key, self.TTL_USPTO_SEARCH, json.dumps(results))
     
     async def get_embedding(self, text_hash: str) -> Optional[list]:
         """Get cached embedding."""
