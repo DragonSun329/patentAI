@@ -1,11 +1,12 @@
 import { useState } from 'react'
 import { BrowserRouter, Routes, Route, Link, useLocation } from 'react-router-dom'
-import { Search, Upload, GitCompare, BarChart3, Menu, X, Download } from 'lucide-react'
+import { Search, Upload, GitCompare, BarChart3, Menu, X, Download, Shield } from 'lucide-react'
 import SearchPage from './pages/SearchPage'
 import UploadPage from './pages/UploadPage'
 import ComparePage from './pages/ComparePage'
 import DashboardPage from './pages/DashboardPage'
 import ImportPage from './pages/ImportPage'
+import PriorArtPage from './pages/PriorArtPage'
 
 function NavLink({ to, icon: Icon, children }) {
   const location = useLocation()
@@ -49,8 +50,8 @@ function Layout({ children }) {
             {/* Desktop Nav */}
             <nav className="hidden md:flex items-center gap-2">
               <NavLink to="/search" icon={Search}>Search</NavLink>
+              <NavLink to="/priorart" icon={Shield}>Prior Art</NavLink>
               <NavLink to="/import" icon={Download}>Import</NavLink>
-              <NavLink to="/upload" icon={Upload}>Upload</NavLink>
               <NavLink to="/compare" icon={GitCompare}>Compare</NavLink>
               <NavLink to="/dashboard" icon={BarChart3}>Dashboard</NavLink>
             </nav>
@@ -69,8 +70,8 @@ function Layout({ children }) {
         {mobileMenuOpen && (
           <nav className="md:hidden border-t border-gray-200 dark:border-gray-700 p-4 space-y-2">
             <NavLink to="/search" icon={Search}>Search</NavLink>
+            <NavLink to="/priorart" icon={Shield}>Prior Art</NavLink>
             <NavLink to="/import" icon={Download}>Import</NavLink>
-            <NavLink to="/upload" icon={Upload}>Upload</NavLink>
             <NavLink to="/compare" icon={GitCompare}>Compare</NavLink>
             <NavLink to="/dashboard" icon={BarChart3}>Dashboard</NavLink>
           </nav>
@@ -95,26 +96,33 @@ function HomePage() {
         Search patents with hybrid vector + fuzzy matching, compare documents, 
         and get AI-powered infringement risk analysis.
       </p>
-      <div className="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto">
+      <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-5xl mx-auto">
+        <Link to="/priorart" className="p-6 bg-gradient-to-br from-purple-500 to-blue-600 rounded-2xl shadow-lg hover:shadow-xl transition-shadow text-white">
+          <Shield className="w-12 h-12 mx-auto mb-4 opacity-90" />
+          <h3 className="text-lg font-semibold">Prior Art</h3>
+          <p className="text-purple-100 text-sm mt-2">
+            Check if your invention might be blocked
+          </p>
+        </Link>
         <Link to="/search" className="p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-lg hover:shadow-xl transition-shadow">
           <Search className="w-12 h-12 text-blue-500 mx-auto mb-4" />
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Search</h3>
           <p className="text-gray-600 dark:text-gray-400 text-sm mt-2">
-            Hybrid semantic + fuzzy search across patent database
+            Hybrid semantic + fuzzy patent search
           </p>
         </Link>
         <Link to="/compare" className="p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-lg hover:shadow-xl transition-shadow">
           <GitCompare className="w-12 h-12 text-purple-500 mx-auto mb-4" />
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Compare</h3>
           <p className="text-gray-600 dark:text-gray-400 text-sm mt-2">
-            LLM-powered infringement analysis between patents
+            Claim-level infringement analysis
           </p>
         </Link>
-        <Link to="/dashboard" className="p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-lg hover:shadow-xl transition-shadow">
-          <BarChart3 className="w-12 h-12 text-green-500 mx-auto mb-4" />
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Dashboard</h3>
+        <Link to="/import" className="p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-lg hover:shadow-xl transition-shadow">
+          <Download className="w-12 h-12 text-green-500 mx-auto mb-4" />
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Import</h3>
           <p className="text-gray-600 dark:text-gray-400 text-sm mt-2">
-            Analytics, metrics, and system health monitoring
+            Import real patents from USPTO
           </p>
         </Link>
       </div>
@@ -129,6 +137,7 @@ export default function App() {
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/search" element={<SearchPage />} />
+          <Route path="/priorart" element={<PriorArtPage />} />
           <Route path="/import" element={<ImportPage />} />
           <Route path="/upload" element={<UploadPage />} />
           <Route path="/compare" element={<ComparePage />} />

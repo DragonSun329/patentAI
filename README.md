@@ -8,6 +8,8 @@ AI-powered patent infringement detection system with hybrid search and LLM analy
 
 - 🔍 **Hybrid Search** - Vector similarity (pgvector) + fuzzy text matching (RapidFuzz)
 - ⚖️ **Claim-Level Analysis** - Parse individual claims, embed separately, compare claim-by-claim
+- 🛡️ **Prior Art Search** - Describe your invention, find blocking patents, get freedom-to-operate analysis
+- 📥 **USPTO Integration** - Import real patents directly from US Patent Office
 - 🤖 **LLM Analysis** - AI-powered infringement risk assessment with explanations
 - 📊 **Prometheus Metrics** - Full observability with Grafana dashboards
 - ⚡ **Redis Caching** - Fast repeated queries
@@ -110,6 +112,13 @@ npm run dev
 | POST | `/claims/compare` | Claim-level comparison between patents |
 | POST | `/claims/search` | Find similar claims across all patents |
 | GET | `/claims/{id}` | Get a specific claim |
+
+### Prior Art Search
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/priorart/search` | Full prior art search with analysis |
+| POST | `/priorart/quick-check` | Quick top-5 similar claims |
+| POST | `/priorart/compare-to-claims` | Compare invention to specific patent |
 
 ### USPTO Import
 | Method | Endpoint | Description |
